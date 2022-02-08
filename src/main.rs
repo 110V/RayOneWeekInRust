@@ -1,5 +1,6 @@
 use rayoneweek::image;
 use ndarray::{Array3, Array};
+use rayoneweek::vec3;
 fn main() {
     const WIDTH:usize = 256;
     const HEIGHT:usize = 256;
