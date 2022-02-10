@@ -156,6 +156,16 @@ mod tests {
         assert_eq!(a+c, Vec3::new(3.0, 4.0, 5.0));
     }
 
+    #[test]
+    fn multiply() {
+        let a = Vec3::new(0.0, 1.0, 2.0);
+        let b = Vec3::new(3.0, 4.0, 5.0);
+        assert_eq!(&a * &b, Vec3::new(0.0, 4.0, 10.0));
+        assert_eq!(a * &b, Vec3::new(0.0, 4.0, 10.0));
+        assert_eq!(&a * b, Vec3::new(0.0, 4.0, 10.0));
+        assert_eq!(a * b, Vec3::new(0.0, 4.0, 10.0));
+    }
+
     fn num_test(){
       
     }

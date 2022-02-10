@@ -8,7 +8,7 @@ pub struct Ray{
 
 impl Ray{
     pub fn new(origin:Point3,dir:Vec3)->Ray{
-        Ray{origin,dir}
+        Ray{origin,dir:dir}
     }
     pub fn at(&self,time:f32)->Point3{
         self.origin + self.dir * time
