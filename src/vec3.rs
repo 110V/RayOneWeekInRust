@@ -1,7 +1,5 @@
 use num::{ToPrimitive};
 use std::ops::{Add, Div, Mul, Sub};
-use std::borrow::{Cow,Borrow};
-use std::convert::AsRef;
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Vec3 {
     pub x: f32,
