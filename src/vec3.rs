@@ -1,5 +1,6 @@
 use num::{ToPrimitive};
-use std::ops::{Add, Div, Mul, Sub};
+use rand::{distributions::Uniform, prelude::Distribution};
+use std::ops::{Add, Div, Mul, Sub, AddAssign, SubAssign, MulAssign, DivAssign};
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Vec3 {
     pub x: f32,
@@ -32,6 +33,20 @@ impl Vec3 {
 
     pub fn sum(&self)->f32 {
       self.x+self.y+self.z
+    }
+
+    pub fn random()->Vec3{
+      let mut rng = rand::thread_rng();
+      let rand_range = Uniform::new(-1.0f32,1.0f32);
+      Vec3::new(rand_range.sample(&mut rng),rand_range.sample(&mut rng),rand_range.sample(&mut rng))
+    }
+    pub fn random_in_unit_sphere()->Vec3{
+      loop{
+        let rand = Vec3::random();
+        if rand.length_squared()<1.0{
+          return rand;
+        }  
+      }
     }
 }
 
@@ -107,26 +122,51 @@ macro_rules! impl_number_operations {
   }
 }
 
+macro_rules! impl_op_assign {
+  ($VectorType:ident $OperationAssign:ident $op_fn:ident $op_symbol:tt) => {
+    impl<'a> $OperationAssign<&'a $VectorType> for $VectorType {
+      fn $op_fn(&mut self, other: &'a $VectorType) {
+        *self = $VectorType {
+          x: self.x $op_symbol other.x,
+          y: self.y $op_symbol other.y,
+          z: self.z $op_symbol other.z,
+        };
+      }
+    }
+
+    impl $OperationAssign for $VectorType {
+      #[inline]
+      fn $op_fn(&mut self, other: $VectorType) {
+        *self = *self $op_symbol &other
+      }
+    }
+  };
+}
+
 
 impl_binary_operations!(Vec3 Add add +);
+impl_op_assign!(Vec3 AddAssign add_assign +);
 impl_number_operations!(Vec3 Add add + f32);
 impl_number_operations!(Vec3 Add add + i32);
 impl_number_operations!(Vec3 Add add + u32);
 impl_number_operations!(Vec3 Add add + usize);
 
 impl_binary_operations!(Vec3 Sub sub -);
+impl_op_assign!(Vec3 SubAssign  sub_assign -);
 impl_number_operations!(Vec3 Sub sub - f32);
 impl_number_operations!(Vec3 Sub sub - i32);
 impl_number_operations!(Vec3 Sub sub - u32);
 impl_number_operations!(Vec3 Sub sub - usize);
 
 impl_binary_operations!(Vec3 Mul mul *);
+impl_op_assign!(Vec3 MulAssign  mul_assign *);
 impl_number_operations!(Vec3 Mul mul * f32);
 impl_number_operations!(Vec3 Mul mul * i32);
 impl_number_operations!(Vec3 Mul mul * u32);
 impl_number_operations!(Vec3 Mul mul * usize);
 
 impl_binary_operations!(Vec3 Div div /);
+impl_op_assign!(Vec3 DivAssign  div_assign /);
 impl_number_operations!(Vec3 Div div / f32);
 impl_number_operations!(Vec3 Div div / i32);
 impl_number_operations!(Vec3 Div div / u32);
