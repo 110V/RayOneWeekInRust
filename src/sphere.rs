@@ -1,19 +1,21 @@
+use std::rc::Rc;
+
 use crate::{
     hittable::{HitRecord, Hittable},
     math_utils::quadratic_equation,
     ray::Ray,
-    vec3::Point3,
+    vec3::Point3, material::Material,
 };
 
-#[derive(Debug)]
 pub struct Sphere {
     pub center: Point3,
     pub radius: f32,
+    pub mat:Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center:Point3,radius:f32)->Sphere{
-        Sphere{center,radius}
+    pub fn new(center:Point3,radius:f32,mat:&Rc<dyn Material>)->Sphere{
+        Sphere{center,radius,mat:mat.clone()}
     }
 }
 
@@ -50,6 +52,7 @@ impl Hittable for Sphere {
                 normal: normal,
                 t: time,
                 front_face:front_face,
+                mat:self.mat.clone()
             };
             return Some(hit_record);
         }

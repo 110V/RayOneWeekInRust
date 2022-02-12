@@ -1,6 +1,6 @@
-use num::{ToPrimitive};
+use num::{Float, ToPrimitive};
 use rand::{distributions::Uniform, prelude::Distribution};
-use std::ops::{Add, Div, Mul, Sub, AddAssign, SubAssign, MulAssign, DivAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Vec3 {
     pub x: f32,
@@ -12,41 +12,71 @@ impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 { x, y, z }
     }
-    pub fn dot(self,other:Vec3)->f32{
-      self.x * other.x + self.y * other.y + self.z * other.z
+    pub fn dot(self, other: Vec3) -> f32 {
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
-    pub fn to_unit(self)->Vec3{
-      let length = self.length();
-      Vec3::new(self.x/length, self.y/length, self.z/length)
+    pub fn to_unit(self) -> Vec3 {
+        let length = self.length();
+        Vec3::new(self.x / length, self.y / length, self.z / length)
     }
     pub fn length_squared(&self) -> f32 {
-      self.x * self.x + self.y * self.y + self.z * self.z
+        self.x * self.x + self.y * self.y + self.z * self.z
     }
 
-    pub fn length(&self)->f32 {
-      self.length_squared().sqrt()
+    pub fn length(&self) -> f32 {
+        self.length_squared().sqrt()
     }
 
-    pub fn to_array(&self)->[f32;3] {
-      [self.x,self.y,self.z]
+    pub fn to_array(&self) -> [f32; 3] {
+        [self.x, self.y, self.z]
     }
 
-    pub fn sum(&self)->f32 {
-      self.x+self.y+self.z
+    pub fn sum(&self) -> f32 {
+        self.x + self.y + self.z
     }
 
-    pub fn random()->Vec3{
-      let mut rng = rand::thread_rng();
-      let rand_range = Uniform::new(-1.0f32,1.0f32);
-      Vec3::new(rand_range.sample(&mut rng),rand_range.sample(&mut rng),rand_range.sample(&mut rng))
+    pub fn random() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        let rand_range = Uniform::new(-1.0f32, 1.0f32);
+        Vec3::new(
+            rand_range.sample(&mut rng),
+            rand_range.sample(&mut rng),
+            rand_range.sample(&mut rng),
+        )
     }
-    pub fn random_in_unit_sphere()->Vec3{
-      loop{
-        let rand = Vec3::random();
-        if rand.length_squared()<1.0{
-          return rand;
-        }  
-      }
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let rand = Vec3::random();
+            if rand.length_squared() < 1.0 {
+                return rand;
+            }
+        }
+    }
+    pub fn near_sero(&self) -> bool {
+        const S: f32 = 1e-8;
+        self.x.abs() < S && self.y.abs() < S && self.z.abs() < S
+    }
+    pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+        v - 2.0 * v.dot(n) * n
+    }
+    pub fn refract(out_n: f32, in_n: f32, in_dir: Vec3, normal: Vec3) -> Option<Vec3> {
+        let cos = -in_dir.dot(normal);
+        let sin = (1.0-cos*cos).sqrt();
+        let plane = (in_dir + cos * normal).to_unit();
+        let p = plane * out_n / in_n *sin;
+        //println!("{}",p.length());
+        let temp = p.length().powf(2.0);
+        let mut rng = rand::thread_rng();
+        let rand_range = Uniform::new(0.0f32,1.0f32);
+        if temp>1.0{     
+          return None//return Vec3::reflect(in_dir, normal);
+        }
+        let normal_through = normal * -(1.0 -temp).sqrt();
+        Some(normal_through + p)
+    }
+
+    pub fn cross(&self,v:Vec3)->Vec3{
+      Vec3::new(self.y*v.z - self.z*v.y,self.z*v.x - self.x*v.z,self.x*v.y - self.y*v.x)
     }
 }
 
@@ -94,9 +124,9 @@ macro_rules! impl_number_operations {
       type Output = $VectorType;
       fn $op_fn(self, other:$num_type) -> $VectorType {
         $VectorType{
-          x: self.x $op_symbol other.to_f32().unwrap(),
-          y: self.y $op_symbol other.to_f32().unwrap(),
-          z: self.z $op_symbol other.to_f32().unwrap()
+          x: self.x $op_symbol other as f32,
+          y: self.y $op_symbol other as f32,
+          z: self.z $op_symbol other as f32
         }
       }
     }
@@ -143,7 +173,6 @@ macro_rules! impl_op_assign {
   };
 }
 
-
 impl_binary_operations!(Vec3 Add add +);
 impl_op_assign!(Vec3 AddAssign add_assign +);
 impl_number_operations!(Vec3 Add add + f32);
@@ -172,7 +201,6 @@ impl_number_operations!(Vec3 Div div / i32);
 impl_number_operations!(Vec3 Div div / u32);
 impl_number_operations!(Vec3 Div div / usize);
 
-
 pub type Point3 = Vec3;
 pub type Color = Vec3;
 
@@ -184,16 +212,16 @@ mod tests {
     fn add() {
         let a = Vec3::new(0.0, 1.0, 2.0);
         let b = Vec3::new(3.0, 4.0, 5.0);
-        let c:f32 = 3.0;
+        let c: f32 = 3.0;
         assert_eq!(&a + &b, Vec3::new(3.0, 5.0, 7.0));
         assert_eq!(a + &b, Vec3::new(3.0, 5.0, 7.0));
         assert_eq!(&a + b, Vec3::new(3.0, 5.0, 7.0));
         assert_eq!(a + b, Vec3::new(3.0, 5.0, 7.0));
-        println!("{:?},{:?},{:?}",a,b,c);
+        println!("{:?},{:?},{:?}", a, b, c);
 
-        assert_eq!(&a+c, Vec3::new(3.0, 4.0, 5.0));
-        assert_eq!(&a+c, Vec3::new(3.0, 4.0, 5.0));
-        assert_eq!(a+c, Vec3::new(3.0, 4.0, 5.0));
+        assert_eq!(&a + c, Vec3::new(3.0, 4.0, 5.0));
+        assert_eq!(&a + c, Vec3::new(3.0, 4.0, 5.0));
+        assert_eq!(a + c, Vec3::new(3.0, 4.0, 5.0));
     }
 
     #[test]
@@ -206,7 +234,5 @@ mod tests {
         assert_eq!(a * b, Vec3::new(0.0, 4.0, 10.0));
     }
 
-    fn num_test(){
-      
-    }
+    fn num_test() {}
 }
