@@ -9,6 +9,10 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+
+  pub fn forward(self,dir:Vec3,bias:f32)->Vec3{
+    self+dir.to_unit()*bias
+  }
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 { x, y, z }
     }
@@ -60,14 +64,13 @@ impl Vec3 {
         v - 2.0 * v.dot(n) * n
     }
     pub fn refract(out_n: f32, in_n: f32, in_dir: Vec3, normal: Vec3) -> Option<Vec3> {
-        let cos = -in_dir.dot(normal);
+        let cos = -in_dir.dot(normal).min(1.0);
         let sin = (1.0-cos*cos).sqrt();
+
         let plane = (in_dir + cos * normal).to_unit();
         let p = plane * out_n / in_n *sin;
         //println!("{}",p.length());
         let temp = p.length().powf(2.0);
-        let mut rng = rand::thread_rng();
-        let rand_range = Uniform::new(0.0f32,1.0f32);
         if temp>1.0{     
           return None//return Vec3::reflect(in_dir, normal);
         }

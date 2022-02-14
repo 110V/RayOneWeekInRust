@@ -1,5 +1,6 @@
 use num::traits::Pow;
-use rand::{distributions::Uniform, prelude::Distribution};
+use rand::{distributions::Uniform, prelude::Distribution, random};
+use crate::material::ScatterResult::Scatterd;
 
 use crate::{
     hittable::HitRecord,
@@ -7,8 +8,14 @@ use crate::{
     vec3::{Color, Vec3},
 };
 
+pub enum ScatterResult {
+    No,
+    Scatterd(Ray,Color),
+    Stucked,
+}
+
 pub trait Material {
-    fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)>;
+    fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> ScatterResult;
 }
 
 pub struct Lambertian {
@@ -51,45 +58,49 @@ impl Glass {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> ScatterResult {
+        if !rec.front_face {
+            return ScatterResult::Stucked;
+        }
         let mut scatter_direction =
-            rec.normal + rec.normal + Vec3::random_in_unit_sphere().to_unit();
+            rec.normal + Vec3::random_in_unit_sphere().to_unit();
         if scatter_direction.near_sero() {
             scatter_direction = rec.normal;
         }
-        Some((Ray::new(rec.p, scatter_direction), self.albedo))
+        ScatterResult::Scatterd(Ray::new(rec.p, scatter_direction), self.albedo)
     }
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> ScatterResult {
+        if !rec.front_face {
+            return ScatterResult::Stucked;
+        }
         let reflected = Vec3::reflect(r_in.dir.to_unit(), rec.normal);
         let scatterd = Ray::new(rec.p, reflected + self.fuzz * Vec3::random_in_unit_sphere());
         if scatterd.dir.dot(rec.normal) < 0.0 {
-            return None;
+            return ScatterResult::No;
         }
-        Some((scatterd, self.albedo))
+        ScatterResult::Scatterd(scatterd, self.albedo)
     }
 }
 
 impl Material for Glass {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> ScatterResult {
         let mut in_n = self.refract_i;
         let mut out_n = 1f32;
         if !rec.front_face {
             in_n = 1f32;
             out_n = in_n;
         }
-        let mut rng = rand::thread_rng();
-        let rand_range = Uniform::new(0.0f32, 1.0f32);
         let cos = r_in.dir.to_unit().dot(-1.0 * rec.normal).min(1.0);
         let mut out_dir: Vec3 = Vec3::reflect(r_in.dir, rec.normal);
-        if Glass::reflectace(cos, out_n / in_n) < rand_range.sample(&mut rng) {
+        if Glass::reflectace(cos, out_n / in_n) < random() {
             if let Some(refracted) = Vec3::refract(out_n, in_n, r_in.dir.to_unit(), rec.normal) {
                 out_dir = refracted;
             }
         }
         let scatterd = Ray::new(rec.p, out_dir);
-        Some((scatterd, self.albedo))
+        ScatterResult::Scatterd(scatterd, self.albedo)
     }
 }
