@@ -31,7 +31,7 @@ impl Hittable for HittableList{
         let mut tmp_record:Option<HitRecord> = None; 
         let mut closest_sofar = t_max;
         self.objects.iter().for_each(|obj|{
-            if let Some(hit_record) = obj.hit(ray, t_min, closest_sofar+0.01){
+            if let Some(hit_record) = obj.hit(ray, t_min, closest_sofar+0.001){
                 closest_sofar = hit_record.t;
                 tmp_record = Some(hit_record);
             }
