@@ -6,4 +6,6 @@ pub mod sphere;
 pub mod camera;
 pub mod math_utils;
 pub mod material;
+pub mod plane;
 mod random;
+pub mod triangle;

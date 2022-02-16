@@ -18,6 +18,10 @@ pub trait Material {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> ScatterResult;
 }
 
+pub struct DebugMat {
+    pub albedo: Color,
+}
+
 pub struct Lambertian {
     pub albedo: Color,
 }
@@ -102,5 +106,11 @@ impl Material for Glass {
         }
         let scatterd = Ray::new(rec.p, out_dir);
         ScatterResult::Scatterd(scatterd, self.albedo)
+    }
+}
+
+impl Material for DebugMat {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> ScatterResult {   
+        ScatterResult::No
     }
 }
