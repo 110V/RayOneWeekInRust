@@ -9,3 +9,7 @@ pub fn array_to_image(arr:Array3<u8>)->RgbImage{
 
     RgbImage::from_raw(width as u32, height as u32, raw).expect("array size error")
 }
+
+pub fn save_array_to_png(arr:Array3<u8>){
+    array_to_image(arr).save(format!("output{}.png",num)).expect("fail");
+}

@@ -1,17 +1,17 @@
-use num::traits::Pow;
-use rand::{distributions::Uniform, prelude::Distribution, random};
-use crate::material::ScatterResult::Scatterd;
+use rand::random;
+
+use crate::hittable::Face;
 
 use crate::{
     hittable::HitRecord,
-    ray::Ray,
-    vec3::{Color, Vec3},
+    math::{Ray,Color,Vec3},
 };
 
 pub enum ScatterResult {
-    No,
     Scatterd(Ray,Color),
+    None,
     Stucked,
+    Debug(Color),
 }
 
 pub trait Material {
@@ -19,20 +19,20 @@ pub trait Material {
 }
 
 pub struct DebugMat {
-    pub albedo: Color,
+    albedo: Color,
 }
 
 pub struct Lambertian {
-    pub albedo: Color,
+    albedo: Color,
 }
 
 pub struct Metal {
-    pub albedo: Color,
+    albedo: Color,
     fuzz: f32,
 }
 
 pub struct Glass {
-    pub albedo: Color,
+    albedo: Color,
     refract_i: f32,
 }
 
@@ -56,14 +56,14 @@ impl Glass {
         Glass { albedo, refract_i }
     }
     pub fn reflectace(cos: f32, refract_ratio: f32) -> f32 {
-        let r0 = ((1.0 - refract_ratio) / (1.0 + refract_ratio)).pow(2.0);
-        r0 + (1.0 - r0) * (1.0 - cos).pow(5.0)
+        let r0 = ((1.0 - refract_ratio) / (1.0 + refract_ratio)).powf(2.0);
+        r0 + (1.0 - r0) * (1.0 - cos).powf(5.0)
     }
 }
 
 impl Material for Lambertian {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> ScatterResult {
-        if !rec.front_face {
+        if let Face::Back = rec.face {
             return ScatterResult::Stucked;
         }
         let mut scatter_direction =
@@ -71,19 +71,20 @@ impl Material for Lambertian {
         if scatter_direction.near_sero() {
             scatter_direction = rec.normal;
         }
-        ScatterResult::Scatterd(Ray::new(rec.p, scatter_direction), self.albedo)
+        let scattered = Ray::new(rec.point, scatter_direction);
+        ScatterResult::Scatterd(scattered, self.albedo)
     }
 }
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> ScatterResult {
-        if !rec.front_face {
+        if let Face::Back = rec.face {
             return ScatterResult::Stucked;
         }
         let reflected = Vec3::reflect(r_in.dir.to_unit(), rec.normal);
-        let scatterd = Ray::new(rec.p, reflected + self.fuzz * Vec3::random_in_unit_sphere());
+        let scatterd = Ray::new(rec.point, reflected + self.fuzz * Vec3::random_in_unit_sphere());
         if scatterd.dir.dot(rec.normal) < 0.0 {
-            return ScatterResult::No;
+            return ScatterResult::None;
         }
         ScatterResult::Scatterd(scatterd, self.albedo)
     }
@@ -92,9 +93,9 @@ impl Material for Metal {
 impl Material for Glass {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> ScatterResult {
         let mut in_n = self.refract_i;
-        let mut out_n = 1f32;
-        if !rec.front_face {
-            in_n = 1f32;
+        let mut out_n = 1.0;
+        if let Face::Back = rec.face {
+            in_n = 1.0;
             out_n = in_n;
         }
         let cos = r_in.dir.to_unit().dot(-1.0 * rec.normal).min(1.0);
@@ -104,13 +105,13 @@ impl Material for Glass {
                 out_dir = refracted;
             }
         }
-        let scatterd = Ray::new(rec.p, out_dir);
+        let scatterd = Ray::new(rec.point, out_dir);
         ScatterResult::Scatterd(scatterd, self.albedo)
     }
 }
 
 impl Material for DebugMat {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> ScatterResult {   
-        ScatterResult::No
+        ScatterResult::Debug(self.albedo)
     }
 }

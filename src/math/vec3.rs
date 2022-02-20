@@ -1,4 +1,3 @@
-use num::{Float, ToPrimitive};
 use rand::{distributions::Uniform, prelude::Distribution};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]

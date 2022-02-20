@@ -1,11 +1,10 @@
 use std::rc::Rc;
 
-use crate::{
-    hittable::{HitRecord, Hittable},
-    math_utils::quadratic_equation,
-    ray::Ray,
-    vec3::Point3, material::Material,
-};
+use crate::hittable::hittable::Face;
+use crate::hittable::{Hittable, HitRecord};
+use crate::math::utils::quadratic_equation;
+use crate::math::{Point3, Ray};
+use crate::material::Material;
 
 pub struct Sphere {
     pub center: Point3,
@@ -41,18 +40,18 @@ impl Hittable for Sphere {
             let intersect_point = ray.at(time);
             let outer_normal = (intersect_point - self.center).to_unit();
             let mut normal = outer_normal;
-            let mut front_face = true;
+            let mut face = Face::Front;
             if ray.dir.dot(outer_normal)>0.0 {
                 normal = -1.0*outer_normal;
-                front_face = false;
+                face = Face::Back;
             }
 
             let hit_record = HitRecord {
-                p: intersect_point,
+                point: intersect_point,
                 normal: normal,
-                t: time,
-                front_face:front_face,
-                mat:self.mat.clone()
+                time: time,
+                face:Face::Back,
+                material:self.mat.clone()
             };
             return Some(hit_record);
         }

@@ -1,13 +1,8 @@
-use std::cmp::Ordering;
+use crate::math::{Vec3, Point3, Ray};
 
-use crate::{
-    ray::Ray,
-    vec3::{Point3, Vec3},
-};
 
 pub struct Camera {
     origin: Point3,
-    look: Point3,
     lower_left_corner: Point3,
     horizontal: Vec3,
     vertical: Vec3,
@@ -32,7 +27,6 @@ impl Camera {
         println!("{:#?} {:#?} {:#?} {:#?}",look,lower_left_corner,horizontal,vertical);
         Camera {
             origin,
-            look,
             lower_left_corner,
             horizontal,
             vertical,

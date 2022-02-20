@@ -1,4 +1,4 @@
-use crate::vec3::{Vec3, Point3};
+use super::{Point3,Vec3};
 
 pub struct Ray{
     pub origin:Point3,

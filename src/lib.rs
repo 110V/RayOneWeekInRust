@@ -1,10 +1,6 @@
-pub mod image;
-pub mod vec3;
-pub mod ray;
 pub mod hittable;
-pub mod sphere;
-pub mod camera;
-pub mod math_utils;
+pub mod io;
 pub mod material;
-pub mod plane;
-pub mod triangle;
+pub mod math;
+pub mod ray_tracer;
+pub mod scene;
