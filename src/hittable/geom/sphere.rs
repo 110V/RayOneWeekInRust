@@ -50,7 +50,7 @@ impl Hittable for Sphere {
                 point: intersect_point,
                 normal: normal,
                 time: time,
-                face:Face::Back,
+                face: face,
                 material:self.mat.clone()
             };
             return Some(hit_record);
