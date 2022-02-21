@@ -55,7 +55,7 @@ impl Vec3 {
             }
         }
     }
-    pub fn near_sero(&self) -> bool {
+    pub fn near_zero(&self) -> bool {
         const S: f32 = 1e-8;
         self.x.abs() < S && self.y.abs() < S && self.z.abs() < S
     }
@@ -205,6 +205,12 @@ impl_number_operations!(Vec3 Div div / usize);
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
+
+impl Color{
+  pub fn from_rgb(r:u8,g:u8,b:u8)->Color{
+    Color{x:r as f32/255.0,y:g as f32/255.0,z:b as f32/255.0}
+  }
+}
 
 #[cfg(test)]
 mod tests {

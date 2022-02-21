@@ -24,7 +24,9 @@ impl Camera {
         let vertical = viewport_height * v;
         let lower_left_corner =
             origin - horizontal / 2 - vertical / 2 - w;
+
         println!("{:#?} {:#?} {:#?} {:#?}",look,lower_left_corner,horizontal,vertical);
+
         Camera {
             origin,
             lower_left_corner,
@@ -32,6 +34,7 @@ impl Camera {
             vertical,
         }
     }
+    
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         Ray::new(
             self.origin,

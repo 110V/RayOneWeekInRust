@@ -1,21 +1,23 @@
+use std::sync::Arc;
+
 use crate::math::Ray;
 
 use super::{Hittable, HitRecord};
 
-pub struct HittableList{
-    pub objects:Vec<Box<dyn Hittable>>,
+pub struct HittableList<'a>{
+    pub objects:Vec<Arc<dyn Hittable + 'a>>,
 }
 
-impl HittableList{
-    pub fn new()->HittableList{
+impl<'a> HittableList<'a>{
+    pub fn new()->HittableList<'a>{
         HittableList{objects:vec!()}
     }
-    pub fn add(&mut self,object:Box<dyn Hittable>){
-        self.objects.push(object);
+    pub fn add(&mut self, object:impl Hittable + 'a){
+        self.objects.push(Arc::new(object));
     }
 }
 
-impl Hittable for HittableList{
+impl Hittable for HittableList<'_>{
     fn hit(&self,ray:&Ray,t_min:f32,t_max:f32)->Option<HitRecord>{
         let mut result:Option<HitRecord> = None;
         let mut closest_sofar = t_max;

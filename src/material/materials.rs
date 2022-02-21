@@ -68,7 +68,7 @@ impl Material for Lambertian {
         }
         let mut scatter_direction =
             rec.normal + Vec3::random_in_unit_sphere().to_unit();
-        if scatter_direction.near_sero() {
+        if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
         let scattered = Ray::new(rec.point, scatter_direction);
