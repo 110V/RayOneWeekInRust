@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::hittable::hittable::Face;
 use crate::hittable::{Hittable, HitRecord};
@@ -9,11 +10,11 @@ use crate::material::Material;
 pub struct Sphere {
     pub center: Point3,
     pub radius: f32,
-    pub mat:Rc<dyn Material>,
+    pub mat:Arc<dyn Material+Send +Sync>,
 }
 
 impl Sphere {
-    pub fn new(center:Point3,radius:f32,mat:&Rc<dyn Material>)->Sphere{
+    pub fn new(center:Point3,radius:f32,mat:&Arc<dyn Material+Send +Sync>)->Sphere{
         Sphere{center,radius,mat:mat.clone()}
     }
 }

@@ -2,16 +2,16 @@ use crate::hittable::{HittableList, Hittable, self};
 
 use super::Camera;
 
-pub struct Scene<'a>{
-    pub hittables:HittableList<'a>,
+pub struct Scene{
+    pub hittables:HittableList,
     pub camera:Camera,
 }
 
-impl<'a> Scene<'a>{
+impl Scene{
     pub fn new(camera:Camera,hittables:HittableList)->Scene{
         Scene{camera,hittables}
     }
-    pub fn add_hitable(&mut self,hittable:impl Hittable + 'a){
+    pub fn add_hitable(&mut self,hittable:Box<dyn Hittable+Send+Sync>){
         self.hittables.add(hittable);
     }
 }

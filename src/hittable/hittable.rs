@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::math::{Point3, Vec3, Ray};
 use crate::material::Material;
@@ -13,7 +13,7 @@ pub struct HitRecord{
     pub normal:Vec3,
     pub time:f32,
     pub face:Face,
-    pub material:Rc<dyn Material>,
+    pub material:Arc<dyn Material>,
 }
 
 pub trait Hittable {

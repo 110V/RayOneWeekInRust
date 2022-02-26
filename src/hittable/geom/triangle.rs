@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use crate::{hittable::{hittable::Face, HitRecord, Hittable}, math::{Ray, Vec3}, material::Material};
 
@@ -10,11 +10,11 @@ pub struct Triangle {
     pub c:Vec3,
     pub area:f32,
     pub plane:Plane,
-    pub mat:Rc<dyn Material>
+    pub mat:Arc<dyn Material +Send +Sync>
 }
 
 impl Triangle{
-    pub fn new(a:Vec3,b:Vec3,c:Vec3,mat:&Rc<dyn Material>)->Self{
+    pub fn new(a:Vec3,b:Vec3,c:Vec3,mat:&Arc<dyn Material +Send +Sync >)->Self{
         Triangle{
             a,b,c,area:(a-b).cross(a-c).length()/2.0,plane:Plane::from_points(a,b,c),mat:mat.clone()
         }

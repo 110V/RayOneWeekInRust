@@ -113,12 +113,12 @@
 //     println!("End!");
 // }
 
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc, time::SystemTime};
 
-use rayoneweek::{ray_tracer::{Renderer, Screen}, math::{Color, Ray, Point3, Vec3}, hittable::{HittableList, geom::{triangle::Triangle, sphere::Sphere}}, material::{Material, Lambertian, Glass, Metal}, scene::{Scene, Camera}};
+use rayoneweek::{ray_tracer::{MultiThreadRenderer, Screen}, math::{Color, Ray, Point3, Vec3}, hittable::{HittableList, geom::{triangle::Triangle, sphere::Sphere}}, material::{Material, Lambertian, Glass, Metal}, scene::{Scene, Camera}};
 
 
-type RcMat = Rc<dyn Material>;
+type RcMat = Arc<dyn Material + Send + Sync>;
 fn main(){
     let red = Color::from_rgb(170,15,10);
     let blue = Color::from_rgb(5,65,180);
@@ -126,13 +126,13 @@ fn main(){
     let gray = Color::from_rgb(230,230,230);
     let white = Color::new(1.0, 1.0, 1.0);
 
-    let matte_red:RcMat  = Rc::new(Lambertian::new(red));
-    let matte_green:RcMat = Rc::new(Lambertian::new(green));
-    let matte_gray:RcMat = Rc::new(Lambertian::new(gray));
-    let matte_blue:RcMat = Rc::new(Lambertian::new(blue));
+    let matte_red:RcMat  = Arc::new(Lambertian::new(red));
+    let matte_green:RcMat = Arc::new(Lambertian::new(green));
+    let matte_gray:RcMat = Arc::new(Lambertian::new(gray));
+    let matte_blue:RcMat = Arc::new(Lambertian::new(blue));
 
-    let glass_white:RcMat = Rc::new(Glass::new(white,1.03));
-    let metal_white:RcMat = Rc::new(Metal::new(white,0.0));
+    let glass_white:RcMat = Arc::new(Glass::new(white,1.03));
+    let metal_white:RcMat = Arc::new(Metal::new(white,0.0));
 
     let triangle = Triangle::new(
         Point3::new(0.0, 0.8, -3.0),
@@ -144,20 +144,20 @@ fn main(){
     let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &matte_green);
 
     let mut hittable_list= HittableList::new();
-    hittable_list.add(front);
+    hittable_list.add(Box::new(front));
 
-    hittable_list.add(triangle);
-    hittable_list.add(left);
-    hittable_list.add(right);
-    hittable_list.add(ground);
+    hittable_list.add(Box::new(triangle));
+    hittable_list.add(Box::new(left));
+    hittable_list.add(Box::new(right));
+    hittable_list.add(Box::new(ground));
 
 
 
 
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
-    const IMG_WIDTH: usize = 1080;
+    const IMG_WIDTH: usize = 1920;
     const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL:u32 = 100;
+    const SAMPLES_PER_PIXEL:u32 = 1000;
     const MAX_DEPTH:u32 = 50;
     //camera
     let vup = Vec3::new(0.0,1.0,0.0);
@@ -170,8 +170,17 @@ fn main(){
     let scene = Scene::new(camera,hittable_list);
     
 
-    let mut renderer = Renderer::new(screen,SAMPLES_PER_PIXEL,MAX_DEPTH,sky,scene);
-    renderer.render_screen();
+    let mut renderer = MultiThreadRenderer::new(screen,SAMPLES_PER_PIXEL,MAX_DEPTH,scene);
+    let now = SystemTime::now();
+    renderer.render_screen(30);
+    match now.elapsed() {
+        Ok(elapsed) => {
+            println!("{}초가 걸렸습니다!", elapsed.as_secs());
+        }
+        Err(e) => {
+            println!("Error: {:?}", e);
+        }
+    }
     renderer.save_screen("output");
 }
 

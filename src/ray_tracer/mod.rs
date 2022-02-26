@@ -1,4 +1,4 @@
 mod renderer;
 
-pub use renderer::Renderer;
+pub use renderer::MultiThreadRenderer;
 pub use renderer::Screen;

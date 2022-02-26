@@ -1,0 +1,163 @@
+use ndarray::{Array, Array3};
+use rand::random;
+use std::{
+    f32::INFINITY,
+    sync::{Arc, Mutex, RwLock},
+    thread::{self},
+};
+
+use crate::{
+    hittable::Hittable,
+    io,
+    material::ScatterResult,
+    math::{Color, Ray},
+    ray_tracer::renderer,
+    scene::Scene,
+};
+
+pub struct Screen {
+    width: usize,
+    height: usize,
+}
+
+impl Screen {
+    pub fn aspect_ratio(&self) -> f32 {
+        self.width as f32 / self.height as f32
+    }
+    pub fn new(width: usize, height: usize) -> Screen {
+        Screen { width, height }
+    }
+    pub fn order_to_coord(&self, order: u32) -> (u32, u32) {
+        let y = order / self.width as u32 - 1;
+        let x = order - (y + 1) * self.width as u32 - 1;
+        (x, y)
+    }
+}
+
+pub struct Renderer<'a> {
+    data: Arc<RwLock<Data<'a>>>,
+    array: Arc<Mutex<Array3<u8>>>,
+}
+
+pub struct Data<'a> {
+    screen: Screen,
+    sample_per_pixel: u32,
+    max_depth: u32,
+    scene: Scene<'a>,
+}
+
+impl Renderer<'_> {
+    pub fn new(
+        screen: Screen,
+        sample_per_pixel: u32,
+        max_depth: u32,
+        scene: Scene,
+    ) -> Renderer<'_> {
+        let array: Array3<u8> = Array::zeros((screen.height, screen.width, 3));
+        let mut_array = Arc::new(Mutex::new(array));
+
+        let data = Data {
+            screen,
+            sample_per_pixel,
+            max_depth,
+            scene,
+        };
+        Renderer {
+            data: Arc::new(RwLock::new(data)),
+            array: mut_array,
+        }
+    }
+
+    pub fn set_color(&mut self, x: u32, y: u32, color: Color) {
+        let data = self.data.read().unwrap();
+        let x = x as usize;
+        let y = y as usize;
+        let scale = 1.0 / data.sample_per_pixel as f32;
+        for i in 0..3 {
+            let color_arr = color.to_array();
+            let array = self.array.clone();
+            (*array.lock().unwrap())[[y, x, i]] =
+                ((color_arr[i] * scale).powf(1.0 / 2.2) * 256.0).clamp(0.0, 255.0) as u8;
+        }
+    }
+
+    pub fn ray_color(&self, r: &Ray, world: &impl Hittable, depth: u32) -> Color {
+        if depth <= 0 {
+            return Color::new(1.0, 0.0, 0.0);
+        }
+
+        if let Some(hit_record) = world.hit(r, 0.001, INFINITY) {
+            match hit_record.material.scatter(r, &hit_record) {
+                ScatterResult::Scatterd(scattered, attenuation) => {
+                    return attenuation * self.ray_color(&scattered, world, depth - 1)
+                }
+                ScatterResult::Stucked => {
+                    return Color::new(0.0, 0.0, 1.0);
+                }
+                ScatterResult::None => {
+                    return Color::new(0.0, 1.0, 0.0);
+                }
+                ScatterResult::Debug(color) => {
+                    return color;
+                }
+            }
+        }
+
+        sky(r)
+    }
+
+    pub fn render_pixel(&mut self, x: u32, y: u32) {
+        let mut color = Color::new(0.0, 0.0, 0.0);
+        let mut height = 0;
+        {
+            let data = self.data.read().unwrap();
+            height = data.screen.height as u32; 
+            for _ in 0..data.sample_per_pixel {
+                let u = (x as f32 + random::<f32>()) / data.screen.width as f32;
+                let v = (y as f32 + random::<f32>()) / data.screen.height as f32;
+                color += self.ray_color(
+                    &data.scene.camera.get_ray(u, v),
+                    &data.scene.hittables,
+                    data.max_depth,
+                );
+            }
+        }
+        self.set_color(x, height - y - 1, color);
+    }
+
+    pub fn render_screen(&self, t_count: u32) {
+        crossbeam::scope(|scope| {
+            let dataa = self.data.read().unwrap();
+            let mut current = dataa.screen.height as u32 * dataa.screen.width as u32;
+
+            for _ in 0..t_count {
+                let renderer = Renderer {
+                    data: self.data.clone(),
+                    array: self.array.clone(),
+                };
+                scope.spawn(move |_| {
+                    loop{
+                    let r = renderer;
+                    //let data = r.data.read().unwrap();
+                    //let (x,y) = data.screen.order_to_coord(current);
+                    current -= 1;
+                    //println!("{},{}",x,y);
+                    println!("{}",current);
+                    }
+                });
+            }
+        }).unwrap();
+    }
+
+    pub fn save_screen(&self, name: &str) {
+        io::image::save_array_to_png(self.array.lock().unwrap().clone(), name);
+    }
+}
+
+fn sky(ray: &Ray) -> Color {
+    let skyblue = Color::new(0.5, 0.7, 1.0);
+    let white = Color::new(1.0, 1.0, 1.0);
+    let unit_dir = ray.dir.to_unit();
+    let t = (unit_dir.y + 1.0) / 2.0;
+    ((1.0 - t) * white) + (t * skyblue)
+}
