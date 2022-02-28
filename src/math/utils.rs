@@ -13,6 +13,8 @@ pub fn discriminant(a:f32,b:f32,c:f32)->f32{
     b*b-4.0*a*c
 }
 
+
+
 #[cfg(test)]
 mod test{
     use super::quadratic_equation;

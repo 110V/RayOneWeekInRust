@@ -90,9 +90,8 @@
 //     world.add(Box::new(right));
 //     world.add(Box::new(triangle));
 
-
 //     //world.add(Box::new(front));
-    
+
 //     //Render
 //     for y in range(IMG_HEIGHT/split_count*num, IMG_HEIGHT/split_count*num+IMG_HEIGHT/split_count) {
 //         println!("{}",IMG_HEIGHT-y);
@@ -102,7 +101,7 @@
 //                 let u = (x as f32 + random::<f32>()) / IMG_WIDTH as f32; //horizontal viewport pos + random::<f32>()
 //                 let v = (y as f32 + random::<f32>()) / IMG_HEIGHT as f32; //vertical veiwport pos
 //                 color += ray_color(&mut cam.get_ray(u, v), &world,50);
-//             } 
+//             }
 //             set_color(x, IMG_HEIGHT/split_count + IMG_HEIGHT/split_count*num - y - 1, color, &mut img_array,SAMPLES_PER_PIXEL);
 
 //         }
@@ -115,35 +114,48 @@
 
 use std::{rc::Rc, sync::Arc, time::SystemTime};
 
-use rayoneweek::{ray_tracer::{MultiThreadRenderer, Screen}, math::{Color, Ray, Point3, Vec3}, hittable::{HittableList, geom::{triangle::Triangle, sphere::Sphere}}, material::{Material, Lambertian, Glass, Metal}, scene::{Scene, Camera}};
-
+use rayoneweek::{
+    hittable::{
+        geom::{sphere::Sphere, triangle::Triangle},
+        HittableList,
+    },
+    io::obj::ObjParser,
+    material::{Glass, Lambertian, Material, Metal},
+    math::{Color, Point3, Ray, Vec3},
+    ray_tracer::{MultiThreadRenderer, Screen},
+    scene::{Camera, Scene},
+};
 
 type RcMat = Arc<dyn Material + Send + Sync>;
-fn main(){
-    let red = Color::from_rgb(170,15,10);
-    let blue = Color::from_rgb(5,65,180);
-    let green = Color::from_rgb(12,175,24);
-    let gray = Color::from_rgb(230,230,230);
+fn main() {
+    let red = Color::from_rgb(170, 15, 10);
+    let blue = Color::from_rgb(5, 65, 180);
+    let green = Color::from_rgb(12, 175, 24);
+    let gray = Color::from_rgb(230, 230, 230);
     let white = Color::new(1.0, 1.0, 1.0);
 
-    let matte_red:RcMat  = Arc::new(Lambertian::new(red));
-    let matte_green:RcMat = Arc::new(Lambertian::new(green));
-    let matte_gray:RcMat = Arc::new(Lambertian::new(gray));
-    let matte_blue:RcMat = Arc::new(Lambertian::new(blue));
+    let matte_red: RcMat = Arc::new(Lambertian::new(red));
+    let matte_green: RcMat = Arc::new(Lambertian::new(green));
+    let matte_gray: RcMat = Arc::new(Lambertian::new(gray));
+    let matte_blue: RcMat = Arc::new(Lambertian::new(blue));
 
-    let glass_white:RcMat = Arc::new(Glass::new(white,1.03));
-    let metal_white:RcMat = Arc::new(Metal::new(white,0.0));
+    let glass_white: RcMat = Arc::new(Glass::new(white, 1.03));
+    let metal_white: RcMat = Arc::new(Metal::new(white, 0.0));
 
     let triangle = Triangle::new(
-        Point3::new(0.0, 0.8, -3.0),
-        Point3::new(3.0, 0.1, -3.0),
-        Point3::new(-0.5, 0.1, -3.0),&metal_white);
-    let left = Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5,&metal_white);
-    let right = Sphere::new(Point3::new(1.5, 0.0, -1.0), 0.5,&matte_red);
-    let front = Sphere::new(Point3::new(0.0,-0.5,-1.5),0.1,&glass_white);
-    let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &matte_green);
+        Point3::new(-0.5, 0.1, -5.0),
 
-    let mut hittable_list= HittableList::new();
+        Point3::new(3.0, 0.1, -5.0),
+        Point3::new(0.0, 0.8, -5.0),
+        
+        &metal_white,
+    );
+    let left = Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, &metal_white);
+    let right = Sphere::new(Point3::new(1.5, 0.0, -1.0), 0.5, &matte_red);
+    let front = Sphere::new(Point3::new(0.0, 0.5, -1.5), 0.5, &glass_white);
+    let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &matte_gray);
+
+    let mut hittable_list = HittableList::new();
     hittable_list.add(Box::new(front));
 
     hittable_list.add(Box::new(triangle));
@@ -151,26 +163,22 @@ fn main(){
     hittable_list.add(Box::new(right));
     hittable_list.add(Box::new(ground));
 
-
-
-
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
-    const IMG_WIDTH: usize = 1920;
+    const IMG_WIDTH: usize = 1000;
     const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL:u32 = 1000;
-    const MAX_DEPTH:u32 = 50;
+    const SAMPLES_PER_PIXEL: u32 = 50;
+    const MAX_DEPTH: u32 = 50;
     //camera
-    let vup = Vec3::new(0.0,1.0,0.0);
-    let origin = Vec3::new (0.0,1.5,1.0);
-    let look = Vec3::new (0.0,0.5,-1.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let origin = Vec3::new(0.0, 1.5, 1.0);
+    let look = Vec3::new(0.0, 0.5, -1.0);
     let vfov = 90.0;
 
-    let screen = Screen::new(IMG_WIDTH,IMG_HEIGHT);
+    let screen = Screen::new(IMG_WIDTH, IMG_HEIGHT);
     let camera = Camera::new(ASPECT_RATIO, vfov, origin, look, vup);
-    let scene = Scene::new(camera,hittable_list);
-    
+    let scene = Scene::new(camera, hittable_list);
 
-    let mut renderer = MultiThreadRenderer::new(screen,SAMPLES_PER_PIXEL,MAX_DEPTH,scene);
+    let mut renderer = MultiThreadRenderer::new(screen, SAMPLES_PER_PIXEL, MAX_DEPTH, scene);
     let now = SystemTime::now();
     renderer.render_screen(30);
     match now.elapsed() {
@@ -182,9 +190,10 @@ fn main(){
         }
     }
     renderer.save_screen("output");
+    // ObjParser::load("tara2.obj");
 }
 
-fn sky(ray:&Ray)->Color{
+fn sky(ray: &Ray) -> Color {
     let skyblue = Color::new(0.5, 0.7, 1.0);
     let white = Color::new(1.0, 1.0, 1.0);
     let unit_dir = ray.dir.to_unit();

@@ -29,10 +29,23 @@ impl Triangle{
         let m = p-self.b;
         let n = p-self.c;
 
+        let u = m.cross(n).to_unit();
+        let v = n.cross(l).to_unit();
+        let w = l.cross(m).to_unit(); 
+
+        let plane_normal = self.plane.normal;
+        let a_in_out = u.dot(plane_normal);
+        let b_in_out = v.dot(plane_normal);
+        let c_in_out = w.dot(plane_normal);
+
+        return a_in_out>0.0&&b_in_out>0.0&&c_in_out>0.0;
+
         let x = l.cross(m).length();
         let y = m.cross(n).length();
         let z = n.cross(l).length();
-        self.area*2.0+0.001>=x+y+z
+
+        (self.area*2.0 - (x+y+z)).abs()< 0.0001
+        
     }
 }
 
@@ -45,15 +58,19 @@ impl Hittable for Triangle {
             }
             if self.is_in_triangle(point){
                 let mut normal = self.plane.normal;
+                let mut face = Face::Front;
+                
                 if ray.dir.dot(normal)>0.0 {
                     normal = -1.0*normal;
+                    face = Face::Back;
+                    
                 }
-                //println!("{:#?}",normal);
+                
                 let hit_record = HitRecord {
                     point,
                     normal,
                     time,
-                    face:Face::Front,
+                    face,
                     material:self.mat.clone()
                 };
                 return Some(hit_record)
