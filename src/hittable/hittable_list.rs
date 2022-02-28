@@ -1,18 +1,20 @@
 use std::sync::{RwLock};
 
 
-use crate::math::Ray;
+use crate::math::{Ray, Vec3};
 
 use super::{Hittable, HitRecord};
 
 pub struct HittableList{
-    pub objects:Vec<Box<dyn Hittable+Send+Sync>>
+    pub objects:Vec<Box<dyn Hittable+Send+Sync>>,
+    pub offset:Vec3,
+    
 }
 
 
 impl<'a> HittableList{
-    pub fn new()->HittableList{
-        HittableList{objects:vec![]}
+    pub fn new(offset:Vec3)->HittableList{
+        HittableList{objects:vec![],offset}
     }
     pub fn add(&mut self, object:Box<dyn Hittable+Send+Sync>){
         self.objects.push(object);
@@ -30,5 +32,12 @@ impl Hittable for HittableList{
             }
         });
         result
+    }
+
+    fn move_pos(&mut self,offset:Vec3){
+        self.offset+=offset;
+        self.objects.iter_mut().for_each(|o|{
+            o.move_pos(offset);
+        })
     }
 }

@@ -19,7 +19,7 @@ pub trait Material {
 }
 
 pub struct DebugMat {
-    albedo: Color,
+    pub albedo: Color,
 }
 
 pub struct Lambertian {

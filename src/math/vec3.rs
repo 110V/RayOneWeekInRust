@@ -33,7 +33,9 @@ impl Vec3 {
     pub fn to_array(&self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
-
+    pub fn from_array(array:[f32;3])->Vec3{
+        Vec3::new(array[0],array[1],array[2])
+    }
     pub fn sum(&self) -> f32 {
         self.x + self.y + self.z
     }

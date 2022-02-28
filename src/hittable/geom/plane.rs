@@ -16,7 +16,6 @@ impl Plane{
     pub fn from_points(a:Vec3,b:Vec3,c:Vec3)->Plane{
         let point = a;
         let normal = (a-b).cross(a-c).to_unit();
-        println!("{:#?} --------",normal);
         Plane{point,normal}
     }
 }

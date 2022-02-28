@@ -157,7 +157,7 @@ impl MultiThreadRenderer {
                         y = pos.1;
                         *current -= 1;
 
-                        if *current % 50000 == 0 {
+                        if *current % 5000 == 0 {
                             println!("{}", current);
                         }
                     }

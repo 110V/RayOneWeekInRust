@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::hittable::hittable::Face;
 use crate::hittable::{Hittable, HitRecord};
 use crate::math::utils::quadratic_equation;
-use crate::math::{Point3, Ray};
+use crate::math::{Point3, Ray, Vec3};
 use crate::material::Material;
 
 pub struct Sphere {
@@ -57,5 +57,9 @@ impl Hittable for Sphere {
             return Some(hit_record);
         }
         None
+    }
+
+    fn move_pos(&mut self,offset:Vec3){
+        self.center+=offset;
     }
 }

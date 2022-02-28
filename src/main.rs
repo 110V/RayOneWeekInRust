@@ -120,7 +120,7 @@ use rayoneweek::{
         HittableList,
     },
     io::obj::ObjParser,
-    material::{Glass, Lambertian, Material, Metal},
+    material::{Glass, Lambertian, Material, Metal, DebugMat},
     math::{Color, Point3, Ray, Vec3},
     ray_tracer::{MultiThreadRenderer, Screen},
     scene::{Camera, Scene},
@@ -141,21 +141,22 @@ fn main() {
 
     let glass_white: RcMat = Arc::new(Glass::new(white, 1.03));
     let metal_white: RcMat = Arc::new(Metal::new(white, 0.0));
-
-    let triangle = Triangle::new(
+    let debug: RcMat = Arc::new(DebugMat{albedo:white});
+    let triangle = Triangle::new_single(
         Point3::new(-0.5, 0.1, -5.0),
-
         Point3::new(3.0, 0.1, -5.0),
         Point3::new(0.0, 0.8, -5.0),
         
         &metal_white,
     );
+    
     let left = Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, &metal_white);
     let right = Sphere::new(Point3::new(1.5, 0.0, -1.0), 0.5, &matte_red);
     let front = Sphere::new(Point3::new(0.0, 0.5, -1.5), 0.5, &glass_white);
     let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &matte_gray);
-
-    let mut hittable_list = HittableList::new();
+    let taraq = ObjParser::load("tara2.obj",&matte_green);
+    let mut hittable_list = HittableList::new(Vec3::new(0.0, 0.0, 0.0));
+    hittable_list.add(Box::new(taraq));
     hittable_list.add(Box::new(front));
 
     hittable_list.add(Box::new(triangle));
@@ -164,14 +165,14 @@ fn main() {
     hittable_list.add(Box::new(ground));
 
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
-    const IMG_WIDTH: usize = 1000;
+    const IMG_WIDTH: usize = 300;
     const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
     const SAMPLES_PER_PIXEL: u32 = 50;
     const MAX_DEPTH: u32 = 50;
     //camera
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let origin = Vec3::new(0.0, 1.5, 1.0);
-    let look = Vec3::new(0.0, 0.5, -1.0);
+    let origin = Vec3::new(1.0, 1.5, 3.0);
+    let look = Vec3::new(0.0, 0.0, 0.0);
     let vfov = 90.0;
 
     let screen = Screen::new(IMG_WIDTH, IMG_HEIGHT);
@@ -180,7 +181,7 @@ fn main() {
 
     let mut renderer = MultiThreadRenderer::new(screen, SAMPLES_PER_PIXEL, MAX_DEPTH, scene);
     let now = SystemTime::now();
-    renderer.render_screen(30);
+    renderer.render_screen(30);  
     match now.elapsed() {
         Ok(elapsed) => {
             println!("{}초가 걸렸습니다!", elapsed.as_secs());
