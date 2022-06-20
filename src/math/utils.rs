@@ -13,6 +13,14 @@ pub fn discriminant(a:f32,b:f32,c:f32)->f32{
     b*b-4.0*a*c
 }
 
+pub fn overlap_range(a:(f32,f32),b:(f32,f32))->Option<(f32,f32)>{
+    let result = (a.0.max(b.0),a.1.min(b.1));
+    if result.0<result.1 {
+        return Some(result);
+    }
+    None
+}
+
 
 
 #[cfg(test)]

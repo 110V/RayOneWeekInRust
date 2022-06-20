@@ -30,6 +30,19 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
+    pub fn get(&self,i:usize)->f32{
+      if i==0{
+        return self.x
+      }
+      else if i==1{
+        return self.y
+      }
+      else if i==2{
+        return self.z
+      }
+      panic!("vector index out of range")
+    }
+
     pub fn to_array(&self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
