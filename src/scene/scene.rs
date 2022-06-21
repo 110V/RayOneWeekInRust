@@ -11,7 +11,7 @@ impl Scene{
     pub fn new(camera:Camera,hittables:HittableList)->Scene{
         Scene{camera,hittables}
     }
-    pub fn add_hitable(&mut self,hittable:Box<dyn Hittable+Send+Sync>){
+    pub fn add_hitable(&mut self,hittable:Box<dyn Hittable>){
         self.hittables.add(hittable);
     }
 }

@@ -2,7 +2,7 @@ use std::{rc::Rc, sync::Arc};
 
 use crate::{hittable::{hittable::Face, HitRecord, Hittable}, math::{Ray, Vec3}, material::Material};
 
-use super::plane::Plane;
+use super::{plane::Plane, aabox::AAbox};
 
 pub enum NormalType{
     Smooth(Vec3,Vec3,Vec3),
@@ -16,17 +16,17 @@ pub struct Triangle {
     pub normal:NormalType,
     pub area:f32,
     pub plane:Plane,
-    pub mat:Arc<dyn Material +Send +Sync>
+    pub mat:Arc<dyn Material>
 }
 
 impl Triangle{
-    pub fn new_single(a:Vec3,b:Vec3,c:Vec3,mat:&Arc<dyn Material +Send +Sync >)->Self{
+    pub fn new_single(a:Vec3,b:Vec3,c:Vec3,mat:&Arc<dyn Material >)->Self{
         let plane = Plane::from_points(a,b,c);
         Triangle{
             a,b,c,normal:NormalType::Single(plane.normal),area:(a-b).cross(a-c).length()/2.0,plane,mat:mat.clone()
         }
     }
-    pub fn new_smooth(a:Vec3,b:Vec3,c:Vec3,a_normal:Vec3,b_normal:Vec3,c_normal:Vec3,mat:&Arc<dyn Material +Send +Sync >)->Self{
+    pub fn new_smooth(a:Vec3,b:Vec3,c:Vec3,a_normal:Vec3,b_normal:Vec3,c_normal:Vec3,mat:&Arc<dyn Material >)->Self{
         let plane = Plane::from_points(a,b,c);
         Triangle{
             a,b,c,normal:NormalType::Smooth(a_normal,b_normal,c_normal),area:(a-b).cross(a-c).length()/2.0,plane,mat:mat.clone()
@@ -97,7 +97,6 @@ impl Hittable for Triangle {
                 if ray.dir.dot(normal)>0.0 {
                     normal = -1.0*normal;
                     face = Face::Back;
-                    //println!("ㅇㄹㅇ");
                 }
                 
                 let hit_record = HitRecord {
@@ -118,5 +117,9 @@ impl Hittable for Triangle {
         self.b+=offset;
         self.c+=offset;
         self.plane.point+=offset;
+    }
+
+    fn get_aabb(&self)->super::aabox::AAbox {
+        AAbox::from_points(vec![self.a,self.b,self.c])
     }
 }

@@ -1,18 +1,19 @@
-use obj::raw::object::Point;
-
 use crate::math::{Point3, Ray, utils::overlap_range};
 
-pub struct AABB{
-    min_p:Point3,
-    max_p:Point3,
+#[derive(PartialEq)]
+#[derive(Debug)]
+
+pub struct AAbox{
+    pub min_p:Point3,
+    pub max_p:Point3,
 }
 
-impl AABB{
-    pub fn new(min_p:Point3,max_p:Point3)->AABB{
-        AABB{min_p,max_p}
+impl AAbox{
+    pub fn new(min_p:Point3,max_p:Point3)->AAbox{
+        Self{min_p,max_p}
     }
 
-    pub fn fromPoints(points:Vec<Point3>)->AABB{
+    pub fn from_points(points:Vec<Point3>)->AAbox{
         if points.is_empty(){
             panic!("points is empty!")
         }
@@ -25,7 +26,11 @@ impl AABB{
                 max_p[i] = max_p[i].max(p.get(i));
             }
         }
-        AABB::new(Point3::from_array(min_p) , Point3::from_array(max_p))
+        AAbox::new(Point3::from_array(min_p) , Point3::from_array(max_p))
+    }
+
+    pub fn center(&self)->Point3{
+        (self.min_p+self.max_p)/2
     }
 
     pub fn intersect(&self,ray:Ray)->Option<f32>{
@@ -70,17 +75,26 @@ impl AABB{
 #[cfg(test)]
 mod test{
 
-    use crate::{math::Vec3, hittable::geom::AABB};
-
+    use crate::{math::Vec3};
+    use crate::hittable::geom::aabox;
     use super::{Ray, Point3};
 
     #[test]
-    fn test(){
-        let a = AABB::AABB::new(Point3::new(-5.0, -5.0, -5.0), Point3::new(5.0, 5.0, 5.0));
-        let b = AABB::AABB::new(Point3::new(-2.0, 0.0, -1.0),Point3::new(2.0, 2.0, 1.0));
-        let c = AABB::AABB::new(Point3::new(-2.0, 0.0, -1.0),Point3::new(2.0, 2.0, 1.0));
+    fn intersect_test(){
+        let a = aabox::AAbox::new(Point3::new(-5.0, -5.0, -5.0), Point3::new(5.0, 5.0, 5.0));
+        let b = aabox::AAbox::new(Point3::new(-2.0, 0.0, -1.0),Point3::new(2.0, 2.0, 1.0));
+        let c = aabox::AAbox::new(Point3::new(-2.0, 0.0, -1.0),Point3::new(2.0, 2.0, 1.0));
         assert_eq!(a.intersect(Ray { origin: Point3::new(0.0,-10.0,0.0), dir: Vec3::new(0.0,1.0,0.0) }),Some(5.0));
         assert_eq!(b.intersect(Ray { origin: Point3::new(-5.0,-5.0,0.0), dir: Vec3::new(4.0,5.0,1.0).to_unit() }).is_some(),true);
         assert_eq!(c.intersect(Ray { origin: Point3::new(-5.0,-5.0,0.0), dir: Vec3::new(4.0,5.0,1.1).to_unit() }),None);
+    }
+    #[test]
+    fn points_test(){
+        let a = vec![
+                Point3::new(0.0,-1.0,10.0),
+                Point3::new(0.1,5.0,2.0),
+                Point3::new(-2.0,1.0,2.0),
+            ];
+        assert_eq!(aabox::AAbox::from_points(a),aabox::AAbox::new(Point3::new(-2.0,-1.0,2.0), Point3::new(0.1,5.0,10.0)));
     }
 }

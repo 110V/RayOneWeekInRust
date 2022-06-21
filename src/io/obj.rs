@@ -11,7 +11,7 @@ use crate::math::Vec3;
 pub struct ObjParser {}
 
 impl ObjParser {
-    pub fn load(path: &str,mat:&Arc<dyn Material + Send + Sync>)->HittableList {
+    pub fn load(path: &str,mat:&Arc<dyn Material>)->HittableList {
         let input = BufReader::new(File::open(path).unwrap());
         let model: Obj = load_obj(input).unwrap();
         let mut triangle_list = HittableList::new(Vec3::new(0.0, 0.0, 0.0));

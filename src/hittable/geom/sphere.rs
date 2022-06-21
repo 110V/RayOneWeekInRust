@@ -7,14 +7,16 @@ use crate::math::utils::quadratic_equation;
 use crate::math::{Point3, Ray, Vec3};
 use crate::material::Material;
 
+use super::aabox::AAbox;
+
 pub struct Sphere {
     pub center: Point3,
     pub radius: f32,
-    pub mat:Arc<dyn Material+Send +Sync>,
+    pub mat:Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center:Point3,radius:f32,mat:&Arc<dyn Material+Send +Sync>)->Sphere{
+    pub fn new(center:Point3,radius:f32,mat:&Arc<dyn Material>)->Sphere{
         Sphere{center,radius,mat:mat.clone()}
     }
 }
@@ -61,5 +63,11 @@ impl Hittable for Sphere {
 
     fn move_pos(&mut self,offset:Vec3){
         self.center+=offset;
+    }
+
+    fn get_aabb(&self)->super::aabox::AAbox {
+        let r = self.radius;
+        let r_vec = Point3::new(r,r,r);
+        AAbox::new(self.center-r_vec, self.center-r_vec)
     }
 }

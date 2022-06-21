@@ -17,6 +17,7 @@ fn main() {
     let red = Color::from_rgb(170, 15, 10);
     let blue = Color::from_rgb(5, 65, 180);
     let yellow = Color::from_rgb(100, 100, 0);
+    let light_yellow = Color::new(1.1, 1.1, 0.5);
     let green = Color::from_rgb(12, 175, 24);
     let gray = Color::from_rgb(230, 230, 230);
     let white = Color::new(1.0, 1.0, 1.0);
@@ -25,7 +26,9 @@ fn main() {
     let matte_green: RcMat = Arc::new(Lambertian::new(green));
     let matte_gray: RcMat = Arc::new(Lambertian::new(gray));
     let matte_blue: RcMat = Arc::new(Lambertian::new(blue));
+    let matte_yellow: RcMat = Arc::new(Lambertian::new(yellow));
 
+    let glass_light_yellow: RcMat = Arc::new(Lambertian::new(light_yellow));
     let glass_yellow: RcMat = Arc::new(Glass::new(yellow, 1.03));
     let metal_white: RcMat = Arc::new(Metal::new(white, 0.0));
     let debug: RcMat = Arc::new(DebugMat{albedo:white});
@@ -41,10 +44,15 @@ fn main() {
     let right = Sphere::new(Point3::new(1.1, 0.0, -2.0), 0.5, &matte_red);
     let front = Sphere::new(Point3::new(0.0, 0.5, -1.5), 0.5, &matte_green);
     let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &matte_gray);
+    let mut ame = ObjParser::load("smol.obj",&glass_light_yellow);
     let mut taraq = ObjParser::load("tara2.obj",&glass_yellow);
-    taraq.move_pos(Vec3::new(0.0,-0.5,0.0));
+
+    taraq.move_pos(Vec3::new(-2.0,-0.5,1.0));
+    ame.move_pos(Vec3::new(2.0,-0.5,0.0));
+
     let mut hittable_list = HittableList::new(Vec3::new(0.0, 0.0, 0.0));
     hittable_list.add(Box::new(taraq));
+    hittable_list.add(Box::new(ame));
     hittable_list.add(Box::new(front));
 
     hittable_list.add(Box::new(triangle));
@@ -53,9 +61,9 @@ fn main() {
     hittable_list.add(Box::new(ground));
 
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
-    const IMG_WIDTH: usize = 2560;
+    const IMG_WIDTH: usize = 1920;
     const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL: u32 = 300;
+    const SAMPLES_PER_PIXEL: u32 = 30;
     const MAX_DEPTH: u32 = 50;
     //camera
     let vup = Vec3::new(0.0, 1.0, 0.0);

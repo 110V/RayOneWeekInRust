@@ -3,12 +3,12 @@ use std::sync::{RwLock};
 
 use crate::math::{Ray, Vec3};
 
-use super::{Hittable, HitRecord};
+use super::{Hittable, HitRecord, bvh::BvhNode, geom::aabox::AAbox, hittable::get_aabb};
 
 pub struct HittableList{
-    pub objects:Vec<Box<dyn Hittable+Send+Sync>>,
+    pub objects:Vec<Box<dyn Hittable>>,
     pub offset:Vec3,
-    
+
 }
 
 
@@ -16,8 +16,12 @@ impl<'a> HittableList{
     pub fn new(offset:Vec3)->HittableList{
         HittableList{objects:vec![],offset}
     }
-    pub fn add(&mut self, object:Box<dyn Hittable+Send+Sync>){
+    pub fn add(&mut self, object:Box<dyn Hittable>){
         self.objects.push(object);
+    }
+    fn to_bvh(&self){
+        //self.objects.
+        //let node = BvhNode{};
     }
 }
 
@@ -39,5 +43,9 @@ impl Hittable for HittableList{
         self.objects.iter_mut().for_each(|o|{
             o.move_pos(offset);
         })
+    }
+
+    fn get_aabb(&self)->super::geom::aabox::AAbox {
+        get_aabb(&self.objects)
     }
 }

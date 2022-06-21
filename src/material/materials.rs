@@ -14,7 +14,7 @@ pub enum ScatterResult {
     Debug(Color),
 }
 
-pub trait Material {
+pub trait Material:Sync+Send {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> ScatterResult;
 }
 
