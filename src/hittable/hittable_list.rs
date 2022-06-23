@@ -19,9 +19,8 @@ impl<'a> HittableList{
     pub fn add(&mut self, object:Box<dyn Hittable>){
         self.objects.push(object);
     }
-    fn to_bvh(&self){
-        //self.objects.
-        //let node = BvhNode{};
+    pub fn to_bvh(self)->BvhNode{
+        BvhNode::new(self.objects).expect("bvh err")
     }
 }
 

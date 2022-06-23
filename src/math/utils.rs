@@ -25,10 +25,16 @@ pub fn overlap_range(a:(f32,f32),b:(f32,f32))->Option<(f32,f32)>{
 
 #[cfg(test)]
 mod test{
-    use super::quadratic_equation;
+    use super::{quadratic_equation, overlap_range};
 
     #[test]
     fn test(){
         assert_eq!(quadratic_equation(2.0,-12.0,10.0),Some([1.0,5.0]))
+    }
+    #[test]
+    fn test_overlap(){
+        assert_eq!(overlap_range((-5.0,10.0), (5.0,100.0)),Some((5.0,10.0)));
+        assert_eq!(overlap_range((-5.0,10.0), (10.0,100.0)),Some((10.0,10.0)));
+        assert_eq!(overlap_range((9.0,10.0), (11.0,100.0)),None);
     }
 }

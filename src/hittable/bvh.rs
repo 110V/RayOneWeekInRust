@@ -1,11 +1,10 @@
-use crate::math::Point3;
+use crate::{math::{Point3, Vec3, Ray}, hittable};
 
-use super::{Hittable, geom::aabox::AAbox, hittable::get_aabb};
-use std::cmp::Ordering::Equal;
+use super::{Hittable, geom::aabox::AAbox, hittable::get_aabb, HitRecord};
+use std::{cmp::Ordering::Equal, clone};
 
 pub enum Child{
-    Node(Box<BvhNode>),
-    Hittable(Box<dyn Hittable>),
+    Node(Box<dyn Hittable>),
     None
 }
 
@@ -17,64 +16,135 @@ pub struct BvhNode{
 }
 
 impl BvhNode{
-    pub fn new(mut objs:Vec<Box<dyn Hittable>>)->Option<BvhNode>{
-        let child = Self::get_child(objs);
-        if let Child::Node(node) = child{
-            return Some(*node);
-        }
-        None
+
+    fn to_child(self)->Child{
+        Child::Node(Box::new(self))
     }
-    fn get_child(mut objs:Vec<Box<dyn Hittable>>)->Child{
+
+    pub fn new(mut objs:Vec<Box<dyn Hittable>>)->Option<BvhNode>{
         if objs.is_empty(){
-            return Child::None;
+            return None;
         }
         let aabb = get_aabb(&objs);
+
         if objs.len() == 1{
-            return Child::Node(Box::new(BvhNode{left:Child::Hittable(objs.remove(0)),right:Child::None,aabb}));
+            return Some(BvhNode{
+                left:Child::Node(objs.remove(0)),
+                right:Child::None,
+                aabb
+            });
         }
         if objs.len() == 2{
-            return Child::Node(Box::new(BvhNode{left:Child::Hittable(objs.remove(0)),right:Child::Hittable(objs.remove(0)),aabb}));
+            return Some(BvhNode{
+                left:Child::Node(objs.remove(0)),
+                right:Child::Node(objs.remove(0)),
+                aabb
+            });
         }
+
         let (left,right) = Self::split_objects(objs);
-        let l_node = Self::get_child(left);
-        let r_node = Self::get_child(right);
-        
-        Child::Node(Box::new(BvhNode { left: l_node, right: r_node, aabb }))
+        let mut l_node = Child::None;
+        let mut r_node = Child::None;
+
+        if let Some(node) = Self::new(left){
+            l_node = node.to_child();
+        }
+        if let Some(node) = Self::new(right){
+            r_node = node.to_child();
+        }
+
+        Some(BvhNode { left: l_node, right: r_node, aabb })
     }
     fn split_objects(mut objs:Vec<Box<dyn Hittable>>)->(Vec<Box<dyn Hittable>>,Vec<Box<dyn Hittable>>){
         if objs.is_empty(){
             return (vec![],vec![]);
         }
-        let mut bounds:Vec<(Point3,usize)> = objs.iter().enumerate().map(|(i,o)|(o.get_aabb().center(),i)).collect();
+        let mut bounds:Vec<Point3> = objs.iter().enumerate().map(|(i,o)|o.get_aabb().center()).collect();
+        let t_bounds = bounds.clone();
+        let mut sorts:Vec<(usize,f32)> = vec![];
         
-        let mut sorts:Vec<(usize,Vec<(Point3,usize)>)> = vec![];
         for i in 0..3{
-            bounds.sort_by(|a,b|a.0.get(i).partial_cmp(&b.0.get(i)).unwrap_or(Equal));
-            sorts.push((i,bounds.clone()));
+            bounds.sort_by(|a,b|{
+                a.get(i).partial_cmp(&b.get(i))
+                .unwrap_or(Equal)
+            });
+            let min = bounds.first().unwrap().get(i);
+            let max = bounds.last().unwrap().get(i);
+            sorts.push((i,max-min));
         }
         sorts.sort_by(|a,b|{
-            let a_i = a.0;
-            let b_i = b.0;
-            let a_len = a.1.last().unwrap().0.get(a_i) - a.1[0].0.get(a_i);
-            let b_len = b.1.last().unwrap().0.get(b_i) - b.1[0].0.get(b_i);
-            b_len.partial_cmp(&a_len).unwrap_or(Equal)
+            a.1.partial_cmp(&b.1)
+            .unwrap_or(Equal)
         });
-        
-        let sorted_objs= &sorts[0].1;
-        let half = sorted_objs.len();
 
+        let xyz = sorts[0].0;  
+        let mut zipped:Vec<(&Point3,Box<dyn Hittable>)> = t_bounds.iter().zip(objs).collect();
+
+        
+        zipped.sort_by(|a,b|{
+            let a_value = a.0.get(xyz);
+            let b_value = b.0.get(xyz);
+            a_value.partial_cmp(&b_value)
+            .unwrap_or(Equal)
+        });
+
+
+        let half = zipped.len()/2;
+        let len = zipped.len();
         let mut left = vec![];
         let mut right = vec![];
+        
 
         for i in 0..half{
-             left.push(objs.remove(sorted_objs[i].1));
+            left.push(zipped.remove(0).1);
         }
-        for i in half..objs.len(){
-            right.push(objs.remove(sorted_objs[i].1));
+        for i in half..len{
+            right.push(zipped.remove(0).1);
         }
         (left,right)
         
     }
 }
 
+impl Hittable for BvhNode{
+    fn hit(&self,ray:&Ray,t_min:f32,t_max:f32)->Option<HitRecord>{
+        let mut result:Option<HitRecord> = None;
+        if self.aabb.intersect(ray).is_some(){
+
+            if let Child::Node(hittable) = &self.left{
+                result = hittable.hit(ray, t_min, t_max);
+            }
+
+            if let Child::Node(hittable) = &self.right{
+                let hr = hittable.hit(ray, t_min, t_max);
+                if let Some(hit_record) = &hr {
+
+                    if let Some(result_hit) = &result{
+                        if hit_record.time<result_hit.time{
+                            result = hr;
+                        }
+                    }
+
+                    else{
+                        result = hr;
+                    }
+
+                }
+            }
+        }
+        result
+    }
+    fn move_pos(&mut self,offset:Vec3){
+        fn move_child(child:&mut Child,offset: Vec3){
+            if let Child::Node(hittable) = child{
+                hittable.move_pos(offset);
+            }
+        }
+        move_child(&mut self.left,offset);
+        move_child(&mut self.right, offset)
+    }
+    fn get_aabb(&self)->AAbox{
+        self.aabb
+    }
+}
 
