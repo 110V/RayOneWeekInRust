@@ -2,7 +2,7 @@ use crate::math::{Point3, Ray, utils::overlap_range};
 
 #[derive(PartialEq)]
 #[derive(Debug)]
-
+#[derive(Clone,Copy)]
 pub struct AAbox{
     pub min_p:Point3,
     pub max_p:Point3,
@@ -33,7 +33,7 @@ impl AAbox{
         (self.min_p+self.max_p)/2
     }
 
-    pub fn intersect(&self,ray:Ray)->Option<f32>{
+    pub fn intersect(&self,ray:&Ray)->Option<f32>{
         let dir = ray.dir;
 
         let origin = ray.origin;
@@ -52,7 +52,9 @@ impl AAbox{
                 }
             }
             else {
-                ranges.push((a/d,b/d));
+                let ad = a/d;
+                let bd = b/d;
+                ranges.push((ad.min(bd),ad.max(bd)));
     
             }
         }
@@ -84,9 +86,9 @@ mod test{
         let a = aabox::AAbox::new(Point3::new(-5.0, -5.0, -5.0), Point3::new(5.0, 5.0, 5.0));
         let b = aabox::AAbox::new(Point3::new(-2.0, 0.0, -1.0),Point3::new(2.0, 2.0, 1.0));
         let c = aabox::AAbox::new(Point3::new(-2.0, 0.0, -1.0),Point3::new(2.0, 2.0, 1.0));
-        assert_eq!(a.intersect(Ray { origin: Point3::new(0.0,-10.0,0.0), dir: Vec3::new(0.0,1.0,0.0) }),Some(5.0));
-        assert_eq!(b.intersect(Ray { origin: Point3::new(-5.0,-5.0,0.0), dir: Vec3::new(4.0,5.0,1.0).to_unit() }).is_some(),true);
-        assert_eq!(c.intersect(Ray { origin: Point3::new(-5.0,-5.0,0.0), dir: Vec3::new(4.0,5.0,1.1).to_unit() }),None);
+        assert_eq!(a.intersect(&Ray { origin: Point3::new(0.0,-10.0,0.0), dir: Vec3::new(0.0,1.0,0.0) }),Some(5.0));
+        assert_eq!(b.intersect(&Ray { origin: Point3::new(-5.0,-5.0,0.0), dir: Vec3::new(4.0,5.0,1.0).to_unit() }).is_some(),true);
+        assert_eq!(c.intersect(&Ray { origin: Point3::new(-5.0,-5.0,0.0), dir: Vec3::new(4.0,5.0,1.1).to_unit() }),None);
     }
     #[test]
     fn points_test(){
