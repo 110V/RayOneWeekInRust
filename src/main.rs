@@ -12,7 +12,7 @@ use rayoneweek::{
     scene::{Camera, Scene},
 };
 
-type RcMat = Arc<dyn Material + Send + Sync>;
+type RcMat = Arc<dyn Material>;
 fn main() {
     let red = Color::from_rgb(170, 15, 10);
     let blue = Color::from_rgb(5, 65, 180);
@@ -40,19 +40,19 @@ fn main() {
         &metal_white,
     );
     
-    let left = Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, &matte_blue);
+    let left = Sphere::new(Point3::new(-3.0, 1.0, -1.0), 0.5, &debug);
     let right = Sphere::new(Point3::new(1.1, 0.0, -2.0), 0.5, &matte_red);
     let front = Sphere::new(Point3::new(0.0, 0.5, -1.5), 0.5, &matte_green);
     let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &matte_gray);
     let mut ame = ObjParser::load("smol.obj",&glass_light_yellow);
     let mut taraq = ObjParser::load("tara2.obj",&glass_yellow);
 
-    taraq.move_pos(Vec3::new(-2.0,-0.5,1.0));
-    ame.move_pos(Vec3::new(2.0,-0.5,0.0));
+    taraq.move_pos(Vec3::new(-2.0,1.0,1.0));
+    ame.move_pos(Vec3::new(0.0,-0.5,0.0));
 
     let mut hittable_list = HittableList::new(Vec3::new(0.0, 0.0, 0.0));
-    hittable_list.add(Box::new(taraq));
-    hittable_list.add(Box::new(ame));
+    hittable_list.add(Box::new(taraq.to_bvh()));
+    //hittable_list.add(Box::new(ame.to_bvh()));
     hittable_list.add(Box::new(front));
 
     hittable_list.add(Box::new(triangle));
@@ -61,9 +61,9 @@ fn main() {
     hittable_list.add(Box::new(ground));
 
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
-    const IMG_WIDTH: usize = 1920;
+    const IMG_WIDTH: usize = 300;
     const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL: u32 = 30;
+    const SAMPLES_PER_PIXEL: u32 = 500;
     const MAX_DEPTH: u32 = 50;
     //camera
     let vup = Vec3::new(0.0, 1.0, 0.0);
