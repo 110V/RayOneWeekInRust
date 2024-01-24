@@ -3,7 +3,7 @@ use std::sync::{RwLock};
 
 use crate::math::{Ray, Vec3};
 
-use super::{Hittable, HitRecord, bvh::BvhNode, geom::aabox::AAbox, hittable::get_aabb};
+use super::{Hittable, HitRecord, bvh::BvhNode, get_aabb};
 
 pub struct HittableList{
     pub objects:Vec<Box<dyn Hittable>>,

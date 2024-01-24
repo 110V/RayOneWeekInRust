@@ -1,6 +1,6 @@
-use crate::{math::{Point3, Vec3, Ray}, hittable};
+use crate::{math::{Point3, Vec3, Ray}};
 
-use super::{Hittable, geom::aabox::AAbox, hittable::get_aabb, HitRecord};
+use super::{Hittable, geom::aabox::AAbox, get_aabb, HitRecord};
 use std::{cmp::Ordering::Equal, clone};
 
 pub enum Child{

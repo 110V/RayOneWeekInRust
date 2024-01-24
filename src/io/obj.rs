@@ -1,10 +1,10 @@
-use obj::{load_obj, Obj, Vertex};
+use obj::{load_obj, Obj};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::Arc;
 
 use crate::hittable::HittableList;
-use crate::hittable::geom::triangle::{self, Triangle};
+use crate::hittable::geom::triangle::Triangle;
 use crate::material::Material;
 use crate::math::Vec3;
 

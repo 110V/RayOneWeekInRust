@@ -1,6 +1,6 @@
 use std::{rc::Rc, sync::Arc};
 
-use crate::{hittable::{hittable::Face, HitRecord, Hittable}, math::{Ray, Vec3}, material::Material};
+use crate::{hittable::{Face, HitRecord, Hittable}, math::{Ray, Vec3}, material::Material};
 
 use super::{plane::Plane, aabox::AAbox};
 

@@ -44,15 +44,13 @@ fn main() {
     let right = Sphere::new(Point3::new(1.1, 0.0, -2.0), 0.5, &matte_red);
     let front = Sphere::new(Point3::new(0.0, 0.5, -1.5), 0.5, &matte_green);
     let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &matte_gray);
-    let mut ame = ObjParser::load("smol.obj",&glass_light_yellow);
     let mut taraq = ObjParser::load("tara2.obj",&glass_yellow);
 
     taraq.move_pos(Vec3::new(-2.0,1.0,1.0));
-    ame.move_pos(Vec3::new(0.0,-0.5,0.0));
 
     let mut hittable_list = HittableList::new(Vec3::new(0.0, 0.0, 0.0));
     hittable_list.add(Box::new(taraq.to_bvh()));
-    //hittable_list.add(Box::new(ame.to_bvh()));
+
     hittable_list.add(Box::new(front));
 
     hittable_list.add(Box::new(triangle));
@@ -61,9 +59,9 @@ fn main() {
     hittable_list.add(Box::new(ground));
 
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
-    const IMG_WIDTH: usize = 300;
+    const IMG_WIDTH: usize = 500;
     const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL: u32 = 500;
+    const SAMPLES_PER_PIXEL: u32 = 10;
     const MAX_DEPTH: u32 = 50;
     //camera
     let vup = Vec3::new(0.0, 1.0, 0.0);
@@ -77,7 +75,7 @@ fn main() {
 
     let mut renderer = MultiThreadRenderer::new(screen, SAMPLES_PER_PIXEL, MAX_DEPTH, scene);
     let now = SystemTime::now();
-    renderer.render_screen(15);
+    renderer.render_screen(1);
     match now.elapsed() {
         Ok(elapsed) => {
             println!("{}초가 걸렸습니다!", elapsed.as_secs());
